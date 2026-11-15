@@ -14,7 +14,8 @@ import com.kirill.physiognomy.domain.model.ResearchProfile
 @Composable
 fun WorkspaceScreen(
     profile: ResearchProfile,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onContinueClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -61,13 +62,19 @@ fun WorkspaceScreen(
                 color = MaterialTheme.colorScheme.onBackground
             )
 
+
             Spacer(modifier = Modifier.height(32.dp))
 
-            Text(
-                text = "(Здесь мы позже добавим фото-редактор и вопросы)",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // --- ДОБАВЛЕНО: Кнопка перехода дальше ---
+            Button(
+                onClick = onContinueClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+            ) {
+                Text("Перейти к анализу", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }

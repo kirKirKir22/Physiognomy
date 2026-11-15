@@ -82,7 +82,8 @@ class MainActivity : ComponentActivity() {
                         currentProfile?.let { profile ->
                             WorkspaceScreen(
                                 profile = profile,
-                                onBackClick = { currentScreen = "profile" }
+                                onBackClick = { currentScreen = "profile" },
+                                onContinueClick = { currentScreen = "editor" }
                             )
                         }
                     }
