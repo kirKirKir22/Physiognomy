@@ -10,11 +10,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kirill.physiognomy.data.repository.ProfileRepositoryImpl
+import com.kirill.physiognomy.domain.model.ResearchProfile
 import com.kirill.physiognomy.presentation.onboarding.OnboardingScreen
 import com.kirill.physiognomy.presentation.profile.ProfileSetupScreen
 import com.kirill.physiognomy.presentation.profile.ProfileViewModel
 import com.kirill.physiognomy.presentation.profile.ProfileViewModelFactory
 import com.kirill.physiognomy.presentation.ui.theme.PhysiognomyTheme
+import com.kirill.physiognomy.presentation.workspace.WorkspaceScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +37,10 @@ class MainActivity : ComponentActivity() {
                 // Добавляем состояние для переключения между экранами
                 var currentScreen by remember { mutableStateOf("onboarding") }
 
+                // --- ДОБАВЛЕНО: Состояние для текущего профиля ---
+                var currentProfile by remember { mutableStateOf<ResearchProfile?>(null) }
+                // -------------------------------------------------
+
                 // --- ДОБАВЛЕНО: Получаем ViewModel ---
                 val profileViewModel: ProfileViewModel = viewModel(factory = viewModelFactory)
                 // ------------------------------------
@@ -50,23 +56,37 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     "profile" -> {
-                        // Вызываем экран создания профиля (код которого я дал в прошлом сообщении)
+                        // Вызываем экран создания профиля
                         ProfileSetupScreen(
                             onBackClick = {
                                 // Возврат назад на экран приветствия
                                 currentScreen = "onboarding"
                             },
                             onStartAnalysis = { name, age, gender, mode ->
-                                // --- ИЗМЕНЕНО: Сохраняем профиль в базу ---
                                 val ageInt = age.toIntOrNull() ?: 0
-                                profileViewModel.createAndSaveProfile(name, ageInt, gender, mode)
 
-                                // Пока просто выводим в консоль для проверки.
-                                println("Создан профиль: Имя=$name, Возраст=$age, Пол=$gender, Режим=$mode")
-                                // -------------------------------------------
+                                // --- ИЗМЕНЕНО: Получаем готовый профиль от ViewModel ---
+                                // ViewModel сам создает ID, сохраняет в базу и возвращает объект
+                                val newProfile = profileViewModel.createAndSaveProfile(name, ageInt, gender, mode)
+                                currentProfile = newProfile
+                                // ----------------------------------------------------------
+
+                                // --- ДОБАВЛЕНО: Переход на чек-лист ---
+                                currentScreen = "workspace"
+                                // -------------------------------------
                             }
                         )
                     }
+                    // --- ДОБАВЛЕНО: Ветка для экрана чек-листа ---
+                    "workspace" -> {
+                        currentProfile?.let { profile ->
+                            WorkspaceScreen(
+                                profile = profile,
+                                onBackClick = { currentScreen = "profile" }
+                            )
+                        }
+                    }
+                    // ---------------------------------------------
                 }
             }
         }

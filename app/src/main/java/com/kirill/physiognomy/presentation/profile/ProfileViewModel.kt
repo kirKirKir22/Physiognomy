@@ -3,15 +3,14 @@ package com.kirill.physiognomy.presentation.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.kirill.physiognomy.data.repository.ProfileRepository
-import com.kirill.physiognomy.data.repository.ProfileRepositoryImpl
 import com.kirill.physiognomy.domain.model.ResearchProfile
 import java.util.UUID
 
 class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
 
-    fun createAndSaveProfile(name: String, age: Int, gender: String, mode: String) {
+    fun createAndSaveProfile(name: String, age: Int, gender: String, mode: String): ResearchProfile {
         val newProfile = ResearchProfile(
-            id = UUID.randomUUID().toString(),
+            id = UUID.randomUUID().toString(), // ID генерируется здесь
             name = name,
             age = age,
             gender = gender,
@@ -19,6 +18,7 @@ class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() 
             answers = emptyMap()
         )
         repository.saveProfile(newProfile)
+        return newProfile // Возвращаем его
     }
 }
 
