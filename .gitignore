@@ -1,0 +1,30 @@
+# Сгенерированные файлы сборки
+.gradle/
+build/
+**/build/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+captures/
+.navigation/
+.externalNativeBuild/
+.cxx/
+
+# Локальная конфигурация (содержит локальный путь к SDK)
+local.properties
+
+# Файлы IDE (если не требуется совместное использование конфигурации IDE)
+.idea/
+*.iml
+
+# Конфиденциальная информация: файлы подписи
+*.jks
+*.keystore
+key.properties
+
+# Логи и системные файлы
+*.log
+.DS_Store
+Thumbs.db
