@@ -87,23 +87,28 @@ fun OnboardingScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // 4. Как это работает (3 шага)
+            // 4. Как это работает (4 шага)
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp) // Чуть уменьшил отступ, чтобы влезло
             ) {
                 StepRow(
                     number = "1",
-                    title = "Загрузите фото",
-                    description = "добавьте несколько фото с разных ракурсов и при разном освещении"
+                    title = "Создайте профиль",
+                    description = "Укажите имя, возраст и пол для точности анализа"
                 )
                 StepRow(
                     number = "2",
-                    title = "Отметьте черты",
-                    description = "Пройдите по чек-листу отмечая черты лица"
+                    title = "Загрузите фото",
+                    description = "Добавьте портрет анфас или профиль"
                 )
                 StepRow(
                     number = "3",
+                    title = "Отметьте черты",
+                    description = "Пройдите по чек-листу, отмечая форму глаз, носа, лба"
+                )
+                StepRow(
+                    number = "4",
                     title = "Получите портрет",
                     description = "Узнайте, как черты лица связаны с характером"
                 )
