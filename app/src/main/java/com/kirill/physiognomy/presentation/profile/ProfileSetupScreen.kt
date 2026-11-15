@@ -64,7 +64,8 @@ fun ProfileSetupScreen(
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Эти данные нужны для контекста. В физиогномике пол и возраст влияют на трактовку некоторых черт.",
+                text = "Эти данные нужны для контекста. " +
+                        "В физиогномике пол и возраст влияют на трактовку некоторых черт.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -100,7 +100,7 @@ fun OnboardingScreen(
                 StepRow(
                     number = "2",
                     title = "Загрузите фото",
-                    description = "Добавьте портрет анфас или профиль"
+                    description = "Добавьте несколько фото с разных ракурсов"
                 )
                 StepRow(
                     number = "3",
@@ -125,7 +125,7 @@ fun OnboardingScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Это наблюдение, а не медицинский или психологический диагноз. " +
+                    text = "Это наблюдение, а не медицинский или психологический диагноз." +
                             "Физиогномика — не наука, но иногда работает.",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

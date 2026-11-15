@@ -8,8 +8,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kirill.physiognomy.data.repository.ProfileRepositoryImpl
 import com.kirill.physiognomy.presentation.onboarding.OnboardingScreen
 import com.kirill.physiognomy.presentation.profile.ProfileSetupScreen
+import com.kirill.physiognomy.presentation.profile.ProfileViewModel
+import com.kirill.physiognomy.presentation.profile.ProfileViewModelFactory
 import com.kirill.physiognomy.presentation.ui.theme.PhysiognomyTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,12 +23,21 @@ class MainActivity : ComponentActivity() {
         // Позволяет контенту рисоваться под системными панелями (статус-бар, навбар)
         enableEdgeToEdge()
 
+        // --- ДОБАВЛЕНО: Инициализация репозитория и фабрики ---
+        val repository = ProfileRepositoryImpl(applicationContext)
+        val viewModelFactory = ProfileViewModelFactory(repository)
+        // -----------------------------------------------------
+
         setContent {
             // Используем нашу тему. Системная тема (темная/светлая) определится автоматически
             PhysiognomyTheme {
 
                 // Добавляем состояние для переключения между экранами
                 var currentScreen by remember { mutableStateOf("onboarding") }
+
+                // --- ДОБАВЛЕНО: Получаем ViewModel ---
+                val profileViewModel: ProfileViewModel = viewModel(factory = viewModelFactory)
+                // ------------------------------------
 
                 when (currentScreen) {
                     "onboarding" -> {
@@ -44,9 +57,13 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = "onboarding"
                             },
                             onStartAnalysis = { name, age, gender, mode ->
-                                // Здесь мы позже добавим сохранение в базу и переход к чек-листу.
+                                // --- ИЗМЕНЕНО: Сохраняем профиль в базу ---
+                                val ageInt = age.toIntOrNull() ?: 0
+                                profileViewModel.createAndSaveProfile(name, ageInt, gender, mode)
+
                                 // Пока просто выводим в консоль для проверки.
                                 println("Создан профиль: Имя=$name, Возраст=$age, Пол=$gender, Режим=$mode")
+                                // -------------------------------------------
                             }
                         )
                     }
