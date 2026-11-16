@@ -35,6 +35,10 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
 }
 
 dependencies {
@@ -55,6 +59,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:5.3.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("org.robolectric:robolectric:4.17")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

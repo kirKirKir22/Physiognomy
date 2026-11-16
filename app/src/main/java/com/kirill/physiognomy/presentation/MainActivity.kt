@@ -16,6 +16,7 @@ import com.kirill.physiognomy.presentation.profile.ProfileSetupScreen
 import com.kirill.physiognomy.presentation.profile.ProfileViewModel
 import com.kirill.physiognomy.presentation.profile.ProfileViewModelFactory
 import com.kirill.physiognomy.presentation.ui.theme.PhysiognomyTheme
+import com.kirill.physiognomy.presentation.workspace.AnalysisScreen
 import com.kirill.physiognomy.presentation.workspace.WorkspaceScreen
 
 class MainActivity : ComponentActivity() {
@@ -52,30 +53,29 @@ class MainActivity : ComponentActivity() {
                             onStartClick = {
                                 // Теперь по клику переходим на экран профиля
                                 currentScreen = "profile"
-                            }
-                        )
+                            })
                     }
+
                     "profile" -> {
                         // Вызываем экран создания профиля
-                        ProfileSetupScreen(
-                            onBackClick = {
-                                // Возврат назад на экран приветствия
-                                currentScreen = "onboarding"
-                            },
-                            onStartAnalysis = { name, age, gender, mode ->
-                                val ageInt = age.toIntOrNull() ?: 0
+                        ProfileSetupScreen(onBackClick = {
+                            // Возврат назад на экран приветствия
+                            currentScreen = "onboarding"
+                        }, onStartAnalysis = { name, age, gender, mode ->
+                            val ageInt = age.toIntOrNull() ?: 0
 
-                                // --- ИЗМЕНЕНО: Получаем готовый профиль от ViewModel ---
-                                // ViewModel сам создает ID, сохраняет в базу и возвращает объект
-                                val newProfile = profileViewModel.createAndSaveProfile(name, ageInt, gender, mode)
-                                currentProfile = newProfile
-                                // ----------------------------------------------------------
+                            // --- ИЗМЕНЕНО: Получаем готовый профиль от ViewModel ---
+                            // ViewModel сам создает ID, сохраняет в базу и возвращает объект
+                            val newProfile = profileViewModel.createAndSaveProfile(
+                                name, ageInt, gender, mode
+                            )
+                            currentProfile = newProfile
+                            // ----------------------------------------------------------
 
-                                // --- ДОБАВЛЕНО: Переход на чек-лист ---
-                                currentScreen = "workspace"
-                                // -------------------------------------
-                            }
-                        )
+                            // --- ДОБАВЛЕНО: Переход на чек-лист ---
+                            currentScreen = "workspace"
+                            // -------------------------------------
+                        })
                     }
                     // --- ДОБАВЛЕНО: Ветка для экрана чек-листа ---
                     "workspace" -> {
@@ -83,11 +83,22 @@ class MainActivity : ComponentActivity() {
                             WorkspaceScreen(
                                 profile = profile,
                                 onBackClick = { currentScreen = "profile" },
-                                onContinueClick = { currentScreen = "editor" }
+                                onContinueClick = {
+                                    // Теперь мы идем на единый экран анализа
+                                    currentScreen = "analysis"
+                                }
                             )
                         }
                     }
-                    // ---------------------------------------------
+                    // --- НОВАЯ ВЕТКА ---
+                    "analysis" -> {
+                        currentProfile?.let { profile ->
+                            AnalysisScreen(
+                                profile = profile,
+                                onBackClick = { currentScreen = "workspace" }
+                            )
+                        }
+                    }
                 }
             }
         }

@@ -6,5 +6,6 @@ data class PhotoItem(
     val brightness: Float = 0f,
     val contrast: Float = 1f,
     val grayscale: Boolean = false,
-    val mirrored: Boolean = false
+    val mirrored: Boolean = false,
+    val rotation: Float = 0f
 )
