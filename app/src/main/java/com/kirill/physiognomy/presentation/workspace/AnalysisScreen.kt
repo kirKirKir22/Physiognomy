@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,9 +25,10 @@ import com.kirill.physiognomy.presentation.workspace.editor.PhotoEditorViewModel
 fun AnalysisScreen(
     profile: ResearchProfile,
     onBackClick: () -> Unit,
-    photoEditorViewModel: PhotoEditorViewModel = viewModel(),
-    // ДОБАВЛЕНО: ViewModel для чек-листа с фабрикой для передачи режима
-    checklistViewModel: ChecklistViewModel = viewModel(
+    photoEditorViewModel: PhotoEditorViewModel = viewModel()
+) {
+    // Инициализируем ViewModel строго внутри тела Composable
+    val checklistViewModel: ChecklistViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
@@ -34,15 +36,16 @@ fun AnalysisScreen(
             }
         }
     )
-) {
+
     val photos by photoEditorViewModel.photos.collectAsState()
     val currentIndex by photoEditorViewModel.currentPhotoIndex.collectAsState()
     val effectsEnabled by photoEditorViewModel.effectsEnabled.collectAsState()
 
-    // ДОБАВЛЕНО: Состояние чек-листа
     val currentQuestionIndex by checklistViewModel.currentQuestionIndex.collectAsState()
     val answers by checklistViewModel.answers.collectAsState()
-    val currentQuestion = checklistViewModel.getCurrentQuestion()
+    val currentQuestion = remember(currentQuestionIndex) {
+        checklistViewModel.getCurrentQuestion()
+    }
 
     Scaffold(
         topBar = {
@@ -64,7 +67,6 @@ fun AnalysisScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            // Фото-редактор (45% высоты) — оставляем как есть
             PhotoEditor(
                 photos = photos,
                 currentIndex = currentIndex,
@@ -74,7 +76,7 @@ fun AnalysisScreen(
                 onSelectPhoto = { index -> photoEditorViewModel.selectPhoto(index) },
                 onBrightness = { value -> photoEditorViewModel.updateBrightness(value) },
                 onContrast = { value -> photoEditorViewModel.updateContrast(value) },
-                onCommitEdits = { /* В будущем здесь будет сохранение, пока пусто */ },
+                onCommitEdits = { },
                 onToggleGrayscale = { photoEditorViewModel.toggleGrayscale() },
                 onToggleMirror = { photoEditorViewModel.toggleMirror() },
                 onResetPhoto = { photoEditorViewModel.resetPhoto() },
@@ -89,7 +91,6 @@ fun AnalysisScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Зона вопросов (55% высоты) — ЗАМЕНЕНО С ЗАГЛУШКИ НА РЕАЛЬНЫЙ КОНТЕНТ
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,7 +100,6 @@ fun AnalysisScreen(
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     if (currentQuestion != null) {
-                        // Панель с вопросом
                         Box(modifier = Modifier.weight(1f)) {
                             QuestionPanel(
                                 question = currentQuestion,
@@ -110,7 +110,6 @@ fun AnalysisScreen(
                             )
                         }
 
-                        // Кнопки навигации
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -119,23 +118,30 @@ fun AnalysisScreen(
                         ) {
                             OutlinedButton(
                                 onClick = { checklistViewModel.previousQuestion() },
-                                enabled = currentQuestionIndex > 0
+                                enabled = currentQuestionIndex > 0,
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Text("Назад")
                             }
 
+                            Spacer(modifier = Modifier.width(16.dp))
+
                             Button(
-                                onClick = { checklistViewModel.nextQuestion() },
-                                enabled = answers[currentQuestion.id] != null && currentQuestionIndex < checklistViewModel.totalQuestions - 1
+                                onClick = {
+                                    println("DEBUG: Нажата кнопка Далее. Текущий индекс: $currentQuestionIndex")
+                                    checklistViewModel.nextQuestion()
+                                },
+                                // Безопасная проверка: если ответ для текущего вопроса есть в карте
+                                enabled = answers[currentQuestion.id] != null,
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Text("Далее")
+                                Text(if (checklistViewModel.isLastQuestion()) "Завершить" else "Далее")
                             }
                         }
                     } else {
-                        // Если вопросов нет (пустой каталог)
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = "Вопросы не найдены",
+                                text = "Вопросы не найдены. Проверьте режим (Blitz/Deep).",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }

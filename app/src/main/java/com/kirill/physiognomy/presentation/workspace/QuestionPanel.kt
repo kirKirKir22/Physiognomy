@@ -2,7 +2,6 @@ package com.kirill.physiognomy.presentation.workspace
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -31,7 +30,6 @@ fun QuestionPanel(
     onOptionSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // 1. Состояние для раскрытия описания самого вопроса
     var isQuestionExpanded by remember(question.id) { mutableStateOf(false) }
 
     Column(
@@ -40,7 +38,6 @@ fun QuestionPanel(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // --- ЗАГОЛОВОК ВОПРОСА ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -67,7 +64,6 @@ fun QuestionPanel(
             )
         }
 
-        // Сворачиваемое описание вопроса (тот самый текст про "Стиль мышления")
         AnimatedVisibility(visible = isQuestionExpanded) {
             Text(
                 text = question.description,
@@ -79,16 +75,17 @@ fun QuestionPanel(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- СПИСОК ВАРИАНТОВ ---
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             question.options.forEach { option ->
                 val isSelected = option.id == selectedOptionId
                 OptionCard(
                     option = option,
                     isSelected = isSelected,
-                    onSelect = { onOptionSelect(option.id) }
+                    onSelect = {
+                        // Добавим лог для отладки, чтобы точно знать, что клик проходит
+                        println("DEBUG: Выбран вариант ${option.id} для вопроса ${question.id}")
+                        onOptionSelect(option.id)
+                    }
                 )
             }
         }
@@ -101,9 +98,7 @@ private fun OptionCard(
     isSelected: Boolean,
     onSelect: () -> Unit
 ) {
-    // 2. Состояние для раскрытия описания конкретного варианта
     var isDetailsExpanded by remember { mutableStateOf(false) }
-
     val backgroundColor = if (isSelected) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
@@ -116,10 +111,11 @@ private fun OptionCard(
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
     ) {
-        // ВЕРХНЯЯ ЧАСТЬ: Выбор варианта и кнопка "i"
+        // ИСПРАВЛЕНО: clickable теперь на всём Row, а не только на Text
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable(onClick = onSelect)
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -128,12 +124,8 @@ private fun OptionCard(
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(onClick = onSelect) // Клик по тексту выбирает вариант
+                modifier = Modifier.weight(1f)
             )
-
-            // Кнопка (i)
             IconButton(
                 onClick = { isDetailsExpanded = !isDetailsExpanded },
                 modifier = Modifier.size(24.dp)
@@ -146,7 +138,6 @@ private fun OptionCard(
             }
         }
 
-        // НИЖНЯЯ ЧАСТЬ: Раскрывающийся блок (Картинка + Текст)
         AnimatedVisibility(visible = isDetailsExpanded) {
             Row(
                 modifier = Modifier
@@ -154,48 +145,31 @@ private fun OptionCard(
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 verticalAlignment = Alignment.Top
             ) {
-                // МЕСТО ДЛЯ КАРТИНКИ
-                if (option.iconRes != null) {
-                    // Если картинка есть, показываем её
-                    androidx.compose.foundation.Image(
-                        painter = painterResource(id = option.iconRes),
-                        contentDescription = option.label,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(end = 12.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surface)
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(end = 12.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Рисунок\nскоро",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                } else {
-                    // Если картинки нет, показываем аккуратную заглушку
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(end = 12.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surface),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "Рисунок\nскоро",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
-
-                // ТЕКСТ ОПИСАНИЯ
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = option.description, // Краткая суть
+                        text = option.description,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = option.fullDescription, // Глубокий текст
+                        text = option.fullDescription,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -44,4 +44,8 @@ class ChecklistViewModel(
             _currentQuestionIndex.value--
         }
     }
+
+    fun isLastQuestion(): Boolean {
+        return _currentQuestionIndex.value == totalQuestions - 1
+    }
 }
