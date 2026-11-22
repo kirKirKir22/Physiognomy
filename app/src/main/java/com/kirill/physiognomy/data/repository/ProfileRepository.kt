@@ -7,4 +7,5 @@ interface ProfileRepository {
     fun getAllProfiles(): List<ResearchProfile>
     fun getProfile(id: String): ResearchProfile?
     fun deleteProfile(id: String)
+    fun updateProfileAnswer(profileId: String, questionId: String, optionId: String)
 }

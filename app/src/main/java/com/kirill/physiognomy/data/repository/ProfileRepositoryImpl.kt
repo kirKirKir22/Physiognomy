@@ -8,19 +8,14 @@ import kotlinx.serialization.json.Json
 
 class ProfileRepositoryImpl(context: Context) : ProfileRepository {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences("physiognomy_profiles", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("physiognomy_profiles", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
 
     override fun saveProfile(profile: ResearchProfile) {
         val currentProfiles = getAllProfiles().toMutableList()
-
-        // Если профиль с таким ID уже есть — удаляем старый
         currentProfiles.removeAll { it.id == profile.id }
-
-        // Добавляем новый
         currentProfiles.add(profile)
-
-        // Сохраняем обратно в JSON
         val jsonString = json.encodeToString(currentProfiles)
         prefs.edit().putString("all_profiles", jsonString).apply()
     }
@@ -30,7 +25,7 @@ class ProfileRepositoryImpl(context: Context) : ProfileRepository {
         return try {
             json.decodeFromString<List<ResearchProfile>>(jsonString)
         } catch (e: Exception) {
-            emptyList() // Если JSON битый — возвращаем пустой список
+            emptyList()
         }
     }
 
@@ -43,5 +38,13 @@ class ProfileRepositoryImpl(context: Context) : ProfileRepository {
         currentProfiles.removeAll { it.id == id }
         val jsonString = json.encodeToString(currentProfiles)
         prefs.edit().putString("all_profiles", jsonString).apply()
+    }
+
+    override fun updateProfileAnswer(profileId: String, questionId: String, optionId: String) {
+        val profile = getProfile(profileId) ?: return
+        val updatedAnswers = profile.answers.toMutableMap().apply {
+            this[questionId] = optionId
+        }
+        saveProfile(profile.copy(answers = updatedAnswers))
     }
 }

@@ -17,85 +17,73 @@ import com.kirill.physiognomy.presentation.profile.ProfileViewModel
 import com.kirill.physiognomy.presentation.profile.ProfileViewModelFactory
 import com.kirill.physiognomy.presentation.ui.theme.PhysiognomyTheme
 import com.kirill.physiognomy.presentation.workspace.AnalysisScreen
+import com.kirill.physiognomy.presentation.workspace.ResultsScreen
 import com.kirill.physiognomy.presentation.workspace.WorkspaceScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Позволяет контенту рисоваться под системными панелями (статус-бар, навбар)
         enableEdgeToEdge()
 
-        // --- ДОБАВЛЕНО: Инициализация репозитория и фабрики ---
         val repository = ProfileRepositoryImpl(applicationContext)
         val viewModelFactory = ProfileViewModelFactory(repository)
-        // -----------------------------------------------------
 
         setContent {
-            // Используем нашу тему. Системная тема (темная/светлая) определится автоматически
             PhysiognomyTheme {
-
-                // Добавляем состояние для переключения между экранами
                 var currentScreen by remember { mutableStateOf("onboarding") }
-
-                // --- ДОБАВЛЕНО: Состояние для текущего профиля ---
                 var currentProfile by remember { mutableStateOf<ResearchProfile?>(null) }
-                // -------------------------------------------------
 
-                // --- ДОБАВЛЕНО: Получаем ViewModel ---
                 val profileViewModel: ProfileViewModel = viewModel(factory = viewModelFactory)
-                // ------------------------------------
 
                 when (currentScreen) {
                     "onboarding" -> {
-                        // Вызываем наш экран приветствия
                         OnboardingScreen(
-                            onStartClick = {
-                                // Теперь по клику переходим на экран профиля
-                                currentScreen = "profile"
-                            })
+                            onStartClick = { currentScreen = "profile" }
+                        )
                     }
-
                     "profile" -> {
-                        // Вызываем экран создания профиля
-                        ProfileSetupScreen(onBackClick = {
-                            // Возврат назад на экран приветствия
-                            currentScreen = "onboarding"
-                        }, onStartAnalysis = { name, age, gender, mode ->
-                            val ageInt = age.toIntOrNull() ?: 0
-
-                            // --- ИЗМЕНЕНО: Получаем готовый профиль от ViewModel ---
-                            // ViewModel сам создает ID, сохраняет в базу и возвращает объект
-                            val newProfile = profileViewModel.createAndSaveProfile(
-                                name, ageInt, gender, mode
-                            )
-                            currentProfile = newProfile
-                            // ----------------------------------------------------------
-
-                            // --- ДОБАВЛЕНО: Переход на чек-лист ---
-                            currentScreen = "workspace"
-                            // -------------------------------------
-                        })
+                        ProfileSetupScreen(
+                            onBackClick = { currentScreen = "onboarding" },
+                            onStartAnalysis = { name, age, gender, mode ->
+                                val ageInt = age.toIntOrNull() ?: 0
+                                val newProfile = profileViewModel.createAndSaveProfile(
+                                    name, ageInt, gender, mode
+                                )
+                                currentProfile = newProfile
+                                currentScreen = "workspace"
+                            }
+                        )
                     }
-                    // --- ДОБАВЛЕНО: Ветка для экрана чек-листа ---
                     "workspace" -> {
                         currentProfile?.let { profile ->
                             WorkspaceScreen(
                                 profile = profile,
                                 onBackClick = { currentScreen = "profile" },
-                                onContinueClick = {
-                                    // Теперь мы идем на единый экран анализа
-                                    currentScreen = "analysis"
-                                }
+                                onContinueClick = { currentScreen = "analysis" }
                             )
                         }
                     }
-                    // --- НОВАЯ ВЕТКА ---
                     "analysis" -> {
                         currentProfile?.let { profile ->
                             AnalysisScreen(
                                 profile = profile,
-                                onBackClick = { currentScreen = "workspace" }
+                                onBackClick = { currentScreen = "workspace" },
+                                onFinishClick = { currentScreen = "results" }
+                            )
+                        }
+                    }
+                    "results" -> {
+                        // ✅ Перечитываем СВЕЖИЙ профиль из репозитория —
+                        // currentProfile хранит старый снапшот с пустыми answers
+                        val freshProfile = currentProfile?.let { repository.getProfile(it.id) }
+                        freshProfile?.let { profile ->
+                            ResultsScreen(
+                                profile = profile,
+                                onBackClick = { currentScreen = "analysis" },
+                                onNewAnalysisClick = {
+                                    currentProfile = null
+                                    currentScreen = "onboarding"
+                                }
                             )
                         }
                     }

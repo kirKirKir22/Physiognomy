@@ -11,10 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kirill.physiognomy.data.repository.ProfileRepositoryImpl
 import com.kirill.physiognomy.domain.model.AppConstants
 import com.kirill.physiognomy.domain.model.ResearchProfile
 import com.kirill.physiognomy.presentation.workspace.editor.PhotoEditor
@@ -25,14 +27,23 @@ import com.kirill.physiognomy.presentation.workspace.editor.PhotoEditorViewModel
 fun AnalysisScreen(
     profile: ResearchProfile,
     onBackClick: () -> Unit,
-    photoEditorViewModel: PhotoEditorViewModel = viewModel()
+    onFinishClick: () -> Unit
 ) {
-    // Инициализируем ViewModel строго внутри тела Composable
+    // ✅ Composable-вызовы — только в теле функции
+    val context = LocalContext.current
+    val photoEditorViewModel: PhotoEditorViewModel = viewModel()
     val checklistViewModel: ChecklistViewModel = viewModel(
+        key = "checklist_${profile.id}",
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                // ❗ Здесь НЕЛЬЗЯ вызывать @Composable — используем захваченный context
+                val repository = ProfileRepositoryImpl(context.applicationContext)
                 @Suppress("UNCHECKED_CAST")
-                return ChecklistViewModel(isBlitzMode = profile.mode == "Blitz") as T
+                return ChecklistViewModel(
+                    repository = repository,
+                    profileId = profile.id,
+                    isBlitzMode = profile.mode == "Blitz"
+                ) as T
             }
         }
     )
@@ -43,6 +54,7 @@ fun AnalysisScreen(
 
     val currentQuestionIndex by checklistViewModel.currentQuestionIndex.collectAsState()
     val answers by checklistViewModel.answers.collectAsState()
+
     val currentQuestion = remember(currentQuestionIndex) {
         checklistViewModel.getCurrentQuestion()
     }
@@ -128,10 +140,12 @@ fun AnalysisScreen(
 
                             Button(
                                 onClick = {
-                                    println("DEBUG: Нажата кнопка Далее. Текущий индекс: $currentQuestionIndex")
-                                    checklistViewModel.nextQuestion()
+                                    if (checklistViewModel.isLastQuestion()) {
+                                        onFinishClick()
+                                    } else {
+                                        checklistViewModel.nextQuestion()
+                                    }
                                 },
-                                // Безопасная проверка: если ответ для текущего вопроса есть в карте
                                 enabled = answers[currentQuestion.id] != null,
                                 modifier = Modifier.weight(1f)
                             ) {
